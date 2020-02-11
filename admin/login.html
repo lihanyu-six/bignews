@@ -15,6 +15,7 @@
   <script src="./libs/jquery-1.12.4.min.js"></script>
   <!-- 引入bootstrap的js文件 -->
   <script src="./libs/bootstrap/js/bootstrap.min.js"></script>
+  
 </head>
 
 <body>
@@ -56,7 +57,7 @@
       </div>
     </div>
   </div>
-
+  <script src="./libs/http.js"></script>
   <script>
     $(function () {
       $('.input_sub').on('click', function (e) {
@@ -69,7 +70,7 @@
           return;
         }
         $.ajax({
-          url: 'http://localhost:8080/api/v1/admin/user/login',
+          url: BigNew.user_login,
           type: 'post',
           data: {
             username: username,
@@ -81,6 +82,7 @@
               $('.modal-body').text('输入正确');
               $('#myModal').modal();
               $('#myModal').on('hidden.bs.modal', function (e) {
+                localStorage.setItem('token',backData.token);
                 window.location.href = './index.html';
               })
 
