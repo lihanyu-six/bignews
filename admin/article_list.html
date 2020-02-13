@@ -72,6 +72,64 @@
             </div>
         </div>
     </div>
+
+    <script src="./libs/http.js"></script>
+
+    <!-- 下拉菜单模板引擎 -->
+    <script id="select_list" type="text/html">
+        <option>所有分类</option>
+        {{each data v}}
+        <option value="{{v.id}}">{{v.name}}</option>
+        {{/each}}
+    </script>
+
+    <!-- 内容模板引擎 -->
+    <script id="content" type="text/html">
+        {{each data.data v}}
+        <tr>
+            <td>{{v.title}}</td>
+            <td>{{v.author}}</td>
+            <td>{{v.category}}</td>
+            <td class="text-center">{{v.date}}</td>
+            <td class="text-center">{{v.state}}</td>
+            <td class="text-center">
+                <a href="article_edit.html" data-id="{{v.categoryId}}" class="btn btn-default btn-xs">编辑</a>
+                <a href="javascript:void(0);" data-id="{{v.categoryId}}" class="btn btn-danger btn-xs delete">删除</a>
+            </td>
+        </tr>
+        {{/each}}
+    </script>
+
+    <script>
+        $(function () {
+            // 获取所有的文章类别,然后通过模板引擎渲染到下拉菜单中.
+            $.ajax({
+                url: BigNew.category_list,
+                type: 'get',
+                success: function (backData) {
+                    if (backData.code == 200) {
+                        // console.log(backData);
+                        var temp1 = template('select_list', backData);
+                        $('#selCategory').html(temp1);
+                    }
+                }
+            })
+
+            // 获取默认的文章数据列表,显示在页面上
+            $.ajax({
+                url: BigNew.article_query,
+                type: 'get',
+                success: function (backData) {
+                    if (backData.code == 200) {
+                        // console.log(backData);
+                        var temp2 = template('content', backData);
+                        $('tbody').html(temp2);
+                    }
+
+                }
+            })
+        })
+    </script>
 </body>
 
 </html>
