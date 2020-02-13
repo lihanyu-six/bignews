@@ -51,6 +51,38 @@
             </table>
         </div>
     </div>
+    <!-- 模态框-Bootstrap -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="exampleModalLabel">新增类别</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <input type="hidden" name="id" id="id">
+                        <div class="form-group">
+                            <label for="recipient-name" class="control-label">名称</label>
+                            <input type="text" class="form-control" id="recipient-name" name="name">
+                        </div>
+                        <div class="form-group">
+                            <label for="message-text" class="control-label">Slug</label>
+                            <input class="form-control" id="message-text" name="slug">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" id="addbtn" class="btn btn-primary" data-dismiss="modal">新增</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <script src="./libs/http.js"></script>
     <script id='article' type="text/html">
         {{each data v}}
@@ -58,21 +90,133 @@
             <td>{{v.name}}</td>
             <td>{{v.slug}}</td>
             <td class="text-center">
-                <a href="javascript:void(0)" data-id = '{{v.id}}' data-toggle="modal" class=" btn btn-info btn-xs">编辑</a>
-                <a href="javascript:void(0)" data-id = '{{v.id}}' class="btn btn-danger btn-xs">删除</a>
+                <a href="javascript:void(0)" data-id='{{v.id}}' data-toggle="modal" data-target="#myModal"
+                    class=" btn btn-info btn-xs">编辑</a>
+                <a href="javascript:void(0)" data-id='{{v.id}}' class="btn btn-danger btn-xs">删除</a>
             </td>
         </tr>
         {{/each}}
     </script>
     <script>
         $(function () {
-            $.ajax({
-                url: BigNew.category_list,
-                type: 'get',
-                success: function (backData) {
-                    console.log(backData);
-                    var temp1 = template('article',backData);
-                    $('tbody').html(temp1);
+            //封装一个函数，里面刷新文章类别内容
+            function category() {
+                $.ajax({
+                    url: BigNew.category_list,
+                    type: 'get',
+                    success: function (backData) {
+                        // console.log(backData);
+                        var temp1 = template('article', backData);
+                        $('tbody').html(temp1);
+                    }
+                })
+            }
+
+            category();
+
+
+            $('#xinzengfenlei').on('click', function () {
+                //点击新增分类清空模态框
+                $('#recipient-name').val("");
+                $('#message-text').val("");
+
+                $('#exampleModalLabel').text('新增类别');
+                //给新增里面的按钮添加蓝色
+                $('#addbtn').text('新增').addClass('btn-primary').removeClass('btn-success');
+
+            })
+
+            //给编辑注册委托点击事件
+            $('tbody').on('click', '.btn-info', function () {
+                $('#exampleModalLabel').text('编辑类别');
+                //给新增里面的按钮添加绿色
+                $('#addbtn').text('编辑').addClass('btn-success').removeClass('btn-primary');
+                $('#recipient-name').val($(this).parent().prev().prev().text());
+                $('#message-text').val($(this).parent().prev().text());
+                $('#id').val($(this).attr('data-id'));
+
+            })
+
+            //给删除委托注册点击事件
+            $('tbody').on('click', '.btn-danger', function () {
+                if (confirm('你确定要删除嘛!')) {
+                    var $that = $(this);
+                    $.ajax({
+                        url: BigNew.category_delete,
+                        type: 'post',
+                        data: {
+                            id: $that.attr('data-id'),
+                        },
+                        success: function (backData) {
+                            if (backData.code == 204) {
+                                // console.log(backData);
+                                // category();
+                                $that.parent().parent().remove();
+                            
+                            }
+
+                        }
+                    })
+                }
+
+            })
+
+            //给模态框里的新增或者编辑注册点击事件
+            $('#addbtn').on('click', function () {
+                if ($(this).hasClass('btn-success')) {
+                    //编辑文章类别
+                    var uname = $('#recipient-name').val().trim();
+                    // console.log(uname);
+
+                    var uslug = $('#message-text').val().trim();
+                    // console.log(uslug);
+
+                    var id = $('#id').val();
+                    // console.log(id);
+                    var form1 = $('.modal-body form').serialize();
+
+                    $.ajax({
+                        url: BigNew.category_edit,
+                        type: 'post',
+                        // data: {
+                        //     id: id,
+                        //     name: uname,
+                        //     slug: uslug
+                        // },
+                        data: form1,
+                        success: function (backData) {
+                            if (backData.code == 200) {
+                                console.log(backData);
+                                // window.location.reload();
+                                category();
+                            }
+                        }
+                    })
+
+                } else {
+                    //新增文章类别
+                    var uname = $('#recipient-name').val().trim();
+                    var uslug = $('#message-text').val().trim();
+                    if (uname == "" || uslug == "") {
+                        alert('请输入正确的内容!');
+                        return;
+                    }
+                    $.ajax({
+                        url: BigNew.category_add,
+                        type: 'post',
+                        data: {
+                            name: uname,
+                            slug: uslug
+                        },
+                        success: function (backData) {
+                            if (backData.code == 201) {
+                                // console.log(backData);
+                                category();
+                            }
+
+                        }
+                    })
+
                 }
             })
         })
