@@ -72,6 +72,7 @@
             </table>
             <div class="row text-center">
                 <ul id="pagination" class="pagination-sm"></ul>
+                <p>没有数据!</p>
             </div>
         </div>
     </div>
@@ -96,8 +97,8 @@
             <td class="text-center">{{v.date}}</td>
             <td class="text-center">{{v.state}}</td>
             <td class="text-center">
-                <a href="article_edit.html" data-id="{{v.categoryId}}" class="btn btn-default btn-xs">编辑</a>
-                <a href="javascript:void(0);" data-id="{{v.categoryId}}" class="btn btn-danger btn-xs delete">删除</a>
+                <a href="article_edit.html?{{v.id}}" class="btn btn-default btn-xs">编辑</a>
+                <a href="javascript:void(0);" data-id="{{v.id}}" class="btn btn-danger btn-xs delete">删除</a>
             </td>
         </tr>
         {{/each}}
@@ -118,6 +119,8 @@
                 }
             })
 
+            
+
             // 封装一个函数，因为要动态改变页数,所以传一个页码形参,因为成功后可能要回调函数,所以传一个callback函数
             function getData(mypage, callback) {
                 $.ajax({
@@ -127,21 +130,31 @@
                         type: $('#selCategory').val().trim(),
                         state: $('#selStatus').val().trim(),
                         page: mypage,
-                        perpage: 6
+                        perpage: 5
                     },
                     success: function (backData) {
                         console.log(backData);
                         var temp2 = template('content', backData);
                         $('tbody').html(temp2);
                         // 添加页码插件
-                        if(callback !=null){
+                        if (callback != null && backData.data.data.length != 0) {
+                            $('#pagination').show().next().hide();
                             callback(backData);
+
+                        } else if (backData.data.data.length == 0 &&backData.data.totalPage == mypage - 1 && backData.data.totalPage !=0) {
+                            mypage -= 1;
+                            $('#pagination').twbsPagination('changeTotalPages', backData.data.totalPage, mypage);
+
+                        } else if (backData.data.data.length == 0 ) {
+                            $('#pagination').hide().next().show();
                         }
 
                     }
 
                 })
             }
+
+            var mypage = 1;
             // 页面一进来调用getdata函数渲染页面，渲染完毕后需要创建页码插件并定义，然后给页码的页数点击事件(页码点击事件是自己的方法)
             // 当点击页码时,再次发送ajax请求,并把响应回来的当前页数据渲染到页面(再次调用getdata方法)
             getData(1, function (backData) {
@@ -155,7 +168,8 @@
                     onPageClick: function (event, page) {
                         // console.info(page);
                         // 响应回来的当前页数据渲染到页面(再次调用getdata方法)
-                        getData(page,null);
+                        mypage = page;
+                        getData(page, null);
 
                     }
                 });
@@ -165,11 +179,35 @@
             // 给筛选注册点击事件,加载新的数据需要再次调用getData方法发送ajax请求
             $('#btnSearch').on('click', function (e) {
                 e.preventDefault();
-                getData(1,function(backData){
-                     // 根据num值重新加载新的页数,最后面的参数是是当前显示的页数
-                    $('#pagination').twbsPagination('changeTotalPages', backData.data.totalPage, 1)
+                getData(1, function (backData) {
+                    // 根据num值重新加载新的页数,最后面的参数是是当前显示的页数
+                    $('#pagination').twbsPagination('changeTotalPages', backData.data.totalPage,1)
                 })
             })
+
+            // 给删除注册委托点击事件
+            $('tbody').on('click', '.delete', function () {
+                var id = $(this).attr('data-id');
+                if (confirm("你确定要删嘛!")) {
+                    $.ajax({
+                        url: BigNew.article_delete,
+                        type: 'post',
+                        data: {
+                            id: id
+                        },
+                        success: function (backData) {
+                            if (backData.code == 204) {
+                                // console.log(backData);
+                                getData(mypage, function (backData) {
+                                    $('#pagination').twbsPagination('changeTotalPages', backData.data.totalPage, mypage);
+                                });
+                            }
+                        }
+                    })
+                }
+            })
+
+
 
 
 
