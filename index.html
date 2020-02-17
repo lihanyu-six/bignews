@@ -272,6 +272,7 @@
 
     <!-- 全部分类 -->
     <script id = "nav-list" type="text/html">
+        <li class = "up"></li>
         {{each data v}}
         <li><a href="./list.html?id={{v.id}}">{{v.name}}</a></li>
         {{/each}}
@@ -354,6 +355,17 @@
                         $('.level_two').html(resHtml);
                         $('.left_menu').html(resHtml);
                     }
+                }
+            })
+
+            // 搜索功能
+            $('.search_btn').on('click',function(){
+                var searchTxt = $(this).prev().val().trim();
+                if(searchTxt == ""){
+                    alert('请输入内容!');
+                    return;
+                }else{
+                    window.location.href = './list.html?search='+searchTxt;
                 }
             })
         })
