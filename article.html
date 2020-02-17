@@ -209,6 +209,97 @@
     <script src="./js/template-web.js"></script>
     <script src="./js/jquery-1.12.4.min.js"></script>
 
+    <script id="detail_list" type="text/html">
+        {{each data v}}
+        <div class="comment_detail_list">
+            <div class="person_pic fl">{{v.author.substr(0,1)}}</div>
+            <div class="name_time fl"><b>{{v.author}}</b><span>{{v.date}}</span></div>
+            <div class="comment_text fl">
+                {{v.content}}
+            </div>
+        </div>
+        {{/each}}
+    </script>
+
+    <script>
+        $(function () {
+            var id = window.location.search.split('=')[1];
+            console.log(id);
+
+            // 如果直接进入页面就会跳到首页
+            if (window.location.search == "") {
+                window.location.href = './index.html';
+            } else {
+                $.ajax({
+                    url: 'http://localhost:8080/api/v1/index/article',
+                    data: {
+                        id: id
+                    },
+                    success: function (backData) {
+                        if (backData.code == 200) {
+                            // console.log(backData);
+                            $('.breadcrumb').children('a').eq(1).text(backData.data.category);
+                            $('.article_title').text(backData.data.title);
+                            $('.article_info').html('<div class="article_info">' + backData.data
+                                .author + ' 发布于 ' + backData.data.date +
+                                '&nbsp;&nbsp;&nbsp;分类: ' + backData.data.category +
+                                ' &nbsp;&nbsp;&nbsp;阅读:(' + backData.data.read +
+                                ')&nbsp;&nbsp;&nbsp;评论: (' + backData.data.comments + ')</div>')
+                            $('.article_con').html(backData.data.content);
+                            if (backData.data.prev != null) {
+                                $('.article_links').children('a').eq(0).text(backData.data.prev
+                                    .title).attr('href', './article.html?id=' + backData.data
+                                    .prev.id);
+                            }
+                            if (backData.data.next != null) {
+                                $('.article_links').children('a').eq(1).text(backData.data.next
+                                    .title).attr('href', './article.html?id=' + backData.data
+                                    .next.id);
+                            }
+
+                        }
+                    }
+                })
+            }
+            
+            // 把评论显示在页面上
+            $.ajax({
+                url:'http://localhost:8080/api/v1/index/get_comment',
+                type:'get',
+                data:{
+                    articleId:id
+                },
+                success:function(backData){
+                    // console.log(backData);
+                    var resHtml = template('detail_list',backData);
+                    $('.comment_list_con').html(resHtml);
+                    $('.comment_count').text(''+backData.data.length+'条评论')
+                }
+            })
+        
+            // 发表评论
+            $('.comment_sub').on('click',function(e){
+                e.preventDefault();
+                var userName = $('.comment_name').val().trim();
+                var content_ipt = $('.comment_input').val().trim();
+                $.ajax({
+                    url:'http://localhost:8080/api/v1/index/post_comment',
+                    type:'post',
+                    data:{
+                        author:userName,
+                        content:content_ipt,
+                        articleId:id,
+                    },
+                    success:function(backData){
+                        if(backData.code ==201){
+                            // console.log(backData);
+                            alert('评论发表成功!');
+                        }
+                    }
+                })
+            })
+        })
+    </script>
 </body>
 
 </html>
