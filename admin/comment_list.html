@@ -209,7 +209,7 @@
               $('tbody').html(resHtml);
 
               if (callBack != null && backData.data.data.length !=0) {
-                // callBack(backData);
+                callBack(backData);
               }else if(backData.data.data.length == 0 && backData.data.totalPage == mypage-1){
                 mypage--;
                 $('#pagination').twbsPagination('changeTotalPages', backData.data.totalPage, mypage);
